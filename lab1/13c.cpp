@@ -1,70 +1,63 @@
-
 #include <bitset>
 #include <cmath>
 #include <iostream>
-#define H_SIZE 4
-#define V_SIZE 5
+unsigned char word[] = "INTEGRAL";
+unsigned char lead = 128; // 10000000
 
-int factorial(int n) {
-  long factorial = 1.0;
-  for (int i = 1; i <= n; ++i) {
-    factorial *= i;
+void printSequence(unsigned char B) {
+  static int inRow = 0;
+  if (inRow == 4) {
+    std::cout << std::endl;
+    inRow = 0;
   }
-  return factorial;
-}
-
-void magic(int *B, int n, int N, int E) {
-  int remove = pow(2, n - E);
-  int restore = pow(2, n - N + 1) - pow(2, n - N - E + 1);
-  int transpose = pow(2, n - N - E - 1);
-  if (restore < 0) {
-    restore = ~restore + 1;
-  }
-  *B = *B + remove + restore + transpose;
-}
-
-void helper(int B, int n, int *N, int *E) {
-  *E = 0;
-  *N = 0;
-  for (int i = (n - 1); i >= 0; i--) {
-    int value = B >> i;
-    if (value & 1) {
-      if (*N > 0) {
-        break;
-      }
-      *E += 1;
-    } else {
-      *N += 1;
+  std::cout << '{';
+  for (int i = 0; i < 8; i++) {
+    char digit = (B >> i) & 1;
+    if (digit) {
+      std::cout << word[i];
     }
   }
+  std::cout << "} ";
+  inRow++;
 }
-
-void utils(int B, int n) {
-  for (int i = (n - 1); i >= 0; i--) {
-    int value = B >> i;
-    if (value & 1) {
-      printf("V");
-    } else {
-      printf("H");
-    }
+unsigned char nextSequence(unsigned char B, int n) {
+  int E = 0, N = 0, counter = n;
+  unsigned char testB = B;
+  // count '1'
+  while ((testB & lead) && counter) {
+    E++;
+    counter--;
+    testB = testB << 1;
   }
-  printf("\n");
-}
+  // count '0'
+  while (!(testB & lead) && counter) {
+    N++;
+    counter--;
+    testB = testB << 1;
+  }
+  printf("zeros = %d, ones = %d\n", N, E);
+  unsigned char wipe = pow(2, n - E);
+  printf("\n%d\n", n - E);
+  int shift = pow(2, n - N + 1) - pow(2, n - N - E + 1);
 
+  // additional code in direct
+  if (shift < 0) {
+    shift = ~shift + 1;
+  }
+  unsigned char transpose = pow(2, n - N - E - 1);
+
+  printf("wipe = %d, shift = %d, transpose = %d\n", wipe, shift, transpose);
+  return B + wipe + shift + transpose;
+}
 int main() {
-  int const n = H_SIZE + V_SIZE;
-  int E, N;
-  int B = 0;
-  for (int i = 0; i < V_SIZE; i++) {
-    B += pow(2, i);
-  }
-
-  int total_combinations =
-      factorial(n) / (factorial(V_SIZE) * (factorial(n - V_SIZE)));
-
-  for (int i = 0; i < total_combinations; i++) {
-    helper(B, n, &N, &E);
-    utils(B, n);
-    magic(&B, n, N, E);
-  }
+  int const n = 8;
+  unsigned char B = 15, newB = 15; // m = 4 (00001111)
+  do {
+    // printSequence(newB);
+    std::cout << std::bitset<n>(newB) << std::endl;
+    newB = nextSequence(newB, n);
+  } while ((B & newB));
+  printSequence(newB);
+  std::cout << std::endl;
+  return 0;
 }
